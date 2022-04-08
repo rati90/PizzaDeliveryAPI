@@ -6,6 +6,7 @@ from models import User
 from werkzeug.security import generate_password_hash, check_password_hash
 from fastapi_jwt_auth import AuthJWT
 from fastapi.encoders import jsonable_encoder
+from tools import authorization_token
 
 auth_router = APIRouter(
     prefix='/auth',
@@ -17,13 +18,8 @@ session = Session(bind=engine)
 
 @auth_router.get('/')
 async def hello(Authorize: AuthJWT = Depends()):
-    try:
-        Authorize.jwt_required()
-
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail='Invalid Token'
-                            )
+    error_message = 'Invalid Token'
+    await authorization_token(Authorize, error_message)
 
     return {'message': 'hello World'}
 
@@ -92,6 +88,5 @@ async def refresh_token(Authorize: AuthJWT = Depends()):
     access_token = Authorize.create_access_token(subject=current_user)
 
     return jsonable_encoder({"access": access_token})
-
 
 
